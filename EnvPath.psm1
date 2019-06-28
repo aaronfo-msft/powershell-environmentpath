@@ -1,40 +1,110 @@
-﻿function Add-EnvPath()
-{
+﻿using namespace System;
+
+#Safety net
+[bool]$TESTMODE = ("TESTMODE" -eq $args[0]) -or ($Host.Name -eq "Visual Studio Code Host")
+[string]$DefaultEnvironmentVariable = if ($TESTMODE) { "TEST_PATH" } else { "PATH" }
+
+class VariableNotFoundException : Exception { }
+
+function Add-EnvPath() {
     Param (
-        [Parameter(Position=0)]
-        [ValidateScript({Test-Path $_})]
-        [string] $Path = (Get-Location).Path
+        [Parameter(Position = 0)]
+        [ValidateScript( { Test-Path $_ })]
+        [string] $Path = (Get-Location).Path,
+        [string] $EnvironmentVariable = $DefaultEnvironmentVariable,
+        [switch] $Force = $false
     )
 
-    if((Get-EnvPath | where { $_.Path -eq $Path }).count -ne 0)
-    {
+    if (((Get-EnvPath $EnvironmentVariable) | Where-Object { $_.Path -eq $Path }).count -ne 0) {
         throw "The current environment path already contains '" + $Path + "'"
     }
 
-    $workingpath = [System.Environment]::GetEnvironmentVariable('PATH', [System.EnvironmentVariableTarget]::User)
-    if ($workingpath -and !($workingpath -match ';$'))
-    {
-        $workingpath = $workingpath + ';'
+    if (!$Force) {
+        $prompt = $Host.UI.PromptForChoice("This operation will globally modify the $EnvironmentVariable environment variable for the current user.", "Continue?", ("&Yes", "&No"), 1)
+        if ($prompt -eq 1) {
+            return
+        }
     }
 
-    $workingpath = $workingpath + $Path
-
-    [System.Environment]::SetEnvironmentVariable('PATH', $workingpath, [System.EnvironmentVariableTarget]::User)
+    $newPath = (getTrimmedPath -envvar $EnvironmentVariable -scope User) + ";" + $Path
+    [Environment]::SetEnvironmentVariable($EnvironmentVariable, $newPath, [EnvironmentVariableTarget]::User)
     Update-EnvPath
-    New-Object PSObject -Property @{Path=$Path; Scope="User"}
+    New-Object PSObject -Property @{Path = $Path; Scope = "User" }
 }
 
-function Get-EnvPath()
+function Get-EnvPath {
+    Param (
+        [string] $EnvironmentVariable = $DefaultEnvironmentVariable
+    )
+
+    try
+    {
+        getPathArray -envvar $EnvironmentVariable -scope Machine
+    }
+    catch [VariableNotFoundException]
+    {
+        $machineException = $_
+    }
+
+    try
+    {
+        getPathArray -envvar $EnvironmentVariable -scope User
+    }
+    catch [VariableNotFoundException]
+    {
+        $userException = $_
+    }
+    
+    if ($machineException -and $userException)
+    {
+        throw $machineException
+    }
+}
+
+function Update-EnvPath {
+    Param (
+        [string] $EnvironmentVariable = $DefaultEnvironmentVariable
+    )
+
+    $machine = getTrimmedPath -envvar $EnvironmentVariable -scope Machine
+    $user = getTrimmedPath -envvar $EnvironmentVariable -scope User
+    $process = getTrimmedPath -envvar $EnvironmentVariable -scope Process
+    $newpath = ($machine + ';' + $user + ';' + $process).trim(';');
+    [Environment]::SetEnvironmentVariable($EnvironmentVariable, $newpath, [EnvironmentVariableTarget]::Process)
+    Set-Item -Path Env:$EnvironmentVariable -Value $newpath
+}
+
+function getTrimmedPath {
+    Param (
+        [Parameter(Mandatory = $true)][string]$envvar, 
+        [Parameter(Mandatory = $true)][EnvironmentVariableTarget]$scope
+    )
+    (getVariable -envvar $envvar -scope $scope).trim(";")
+}
+
+function getPathArray
 {
-    ([System.Environment]::GetEnvironmentVariable('PATH', [System.EnvironmentVariableTarget]::Machine)+'').trim(';') -split ';' | % {New-Object PSObject -Property @{Path=$_; Scope="Machine"}} 
-    ([System.Environment]::GetEnvironmentVariable('PATH', [System.EnvironmentVariableTarget]::User)+'').trim(';') -split ';' | % {New-Object PSObject -Property @{Path=$_; Scope="User"}} 
+    Param (
+        [Parameter(Mandatory = $true)][string]$envvar, 
+        [Parameter(Mandatory = $true)][EnvironmentVariableTarget]$scope
+    )
+    (getTrimmedPath -envvar $EnvironmentVariable -scope $scope) -split ';' | ForEach-Object { New-Object PSObject -Property @{Path = $_; Scope = $scope } } 
 }
 
-function Update-EnvPath()
-{
-    $machine = ([System.Environment]::GetEnvironmentVariable('PATH', [System.EnvironmentVariableTarget]::Machine)+'').trim(';')
-    $user = ([System.Environment]::GetEnvironmentVariable('PATH', [System.EnvironmentVariableTarget]::User)+'').trim(';')
-    [System.Environment]::SetEnvironmentVariable('PATH', ($machine + ';' + $user).trim(';'), [System.EnvironmentVariableTarget]::Process)
+function getVariable{
+    Param (
+        [Parameter(Mandatory = $true)][string]$envvar, 
+        [Parameter(Mandatory = $true)][EnvironmentVariableTarget]$scope
+    )
+
+    $var = [Environment]::GetEnvironmentVariable($envvar, $scope)
+    if(!$var)
+    {
+        throw [VariableNotFoundException]::new()
+    }
+    $var
 }
 
-Export-ModuleMember -Function Add-EnvPath,Get-EnvPath
+if (!$TESTMODE) {
+    Export-ModuleMember -Function Add-EnvPath, Get-EnvPath
+}

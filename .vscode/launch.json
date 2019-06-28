@@ -1,0 +1,24 @@
+{
+    // Use IntelliSense to learn about possible attributes.
+    // Hover to view descriptions of existing attributes.
+    // For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "name": "Reload",
+            "type": "PowerShell",
+            "request": "launch",
+            "script": "Import-Module",
+            "args": [".\\EnvPath.psm1 -Force -ArgumentList \"TESTMODE\""],
+            "cwd": "${file}"
+        },
+        {
+            "name": "Get-EnvPath",
+            "type": "PowerShell",
+            "request": "launch",
+            "script": "$LAUNCHSCRIPT=\"Get-EnvPath -EnvironmentVariable TEST_PATH\"",
+            "args": [";Import-Module .\\EnvPath.psm1 -Force -ArgumentList \"TEST_PATH\"; Invoke-Expression $LAUNCHSCRIPT"],
+            "cwd": "${file}" 
+        },
+    ]
+}
