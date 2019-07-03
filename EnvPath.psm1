@@ -37,26 +37,21 @@ function Get-EnvPath {
         [string] $EnvironmentVariable = $DefaultEnvironmentVariable
     )
 
-    try
-    {
+    try {
         getPathArray -envvar $EnvironmentVariable -scope Machine
     }
-    catch [VariableNotFoundException]
-    {
+    catch [VariableNotFoundException] {
         $machineException = $_
     }
 
-    try
-    {
+    try {
         getPathArray -envvar $EnvironmentVariable -scope User
     }
-    catch [VariableNotFoundException]
-    {
+    catch [VariableNotFoundException] {
         $userException = $_
     }
     
-    if ($machineException -and $userException)
-    {
+    if ($machineException -and $userException) {
         throw $machineException
     }
 }
@@ -82,8 +77,7 @@ function getTrimmedPath {
     (getVariable -envvar $envvar -scope $scope).trim(";")
 }
 
-function getPathArray
-{
+function getPathArray {
     Param (
         [Parameter(Mandatory = $true)][string]$envvar, 
         [Parameter(Mandatory = $true)][EnvironmentVariableTarget]$scope
@@ -91,15 +85,14 @@ function getPathArray
     (getTrimmedPath -envvar $EnvironmentVariable -scope $scope) -split ';' | ForEach-Object { New-Object PSObject -Property @{Path = $_; Scope = $scope } } 
 }
 
-function getVariable{
+function getVariable {
     Param (
         [Parameter(Mandatory = $true)][string]$envvar, 
         [Parameter(Mandatory = $true)][EnvironmentVariableTarget]$scope
     )
 
     $var = [Environment]::GetEnvironmentVariable($envvar, $scope)
-    if(!$var)
-    {
+    if (!$var) {
         throw [VariableNotFoundException]::new()
     }
     $var
