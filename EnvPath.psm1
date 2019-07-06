@@ -1,4 +1,4 @@
-﻿using namespace System;
+using namespace System;
 
 #Safety net
 [bool]$TESTMODE = ("TESTMODE" -eq $args[0]) -or ($Host.Name -eq "Visual Studio Code Host")
@@ -82,8 +82,7 @@ function getTrimmedPath {
     (getVariable -envvar $envvar -scope $scope).trim(";")
 }
 
-function getPathArray
-{
+function getPathArray {
     Param (
         [Parameter(Mandatory = $true)][string]$envvar, 
         [Parameter(Mandatory = $true)][EnvironmentVariableTarget]$scope
@@ -91,22 +90,20 @@ function getPathArray
     (getTrimmedPath -envvar $EnvironmentVariable -scope $scope) -split ';' | ForEach-Object { New-Object PSObject -Property @{Path = $_; Scope = $scope } } 
 }
 
-function getVariable{
+function getVariable {
     Param (
         [Parameter(Mandatory = $true)][string]$envvar, 
         [Parameter(Mandatory = $true)][EnvironmentVariableTarget]$scope
     )
 
     $var = getEnvironmentVariable $envvar $scope
-    if(!$var)
-    {
+    if (!$var) {
         throw [VariableNotFoundException]::new()
     }
     $var
 }
 
-function setEnvironmentVariable
-{
+function setEnvironmentVariable {
     Param(
         [string]$EnvironmentVariable,
         [string]$Value,
