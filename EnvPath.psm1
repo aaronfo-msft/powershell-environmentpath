@@ -45,7 +45,7 @@ function Get-EnvPath {
         }
         catch [VariableNotFoundException] {
             $exceptionCount++
-            if(!$firstException) {
+            if (!$firstException) {
                 $firstException = $_
             }
         }
