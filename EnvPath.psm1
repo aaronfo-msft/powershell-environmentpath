@@ -27,7 +27,7 @@ function Add-EnvPath() {
     }
 
     $newPath = (getTrimmedPath -envvar $EnvironmentVariable -scope User) + ";" + $Path
-    [Environment]::SetEnvironmentVariable($EnvironmentVariable, $newPath, [EnvironmentVariableTarget]::User)
+    setEnvironmentVariable $EnvironmentVariable $newPath [EnvironmentVariableTarget]::User
     Update-EnvPath
     New-Object PSObject -Property @{Path = $Path; Scope = "User" }
 }
@@ -70,7 +70,7 @@ function Update-EnvPath {
     $user = getTrimmedPath -envvar $EnvironmentVariable -scope User
     $process = getTrimmedPath -envvar $EnvironmentVariable -scope Process
     $newpath = ($machine + ';' + $user + ';' + $process).trim(';');
-    [Environment]::SetEnvironmentVariable($EnvironmentVariable, $newpath, [EnvironmentVariableTarget]::Process)
+    setEnvironmentVariable $EnvironmentVariable $newpath [EnvironmentVariableTarget]::Process
     Set-Item -Path Env:$EnvironmentVariable -Value $newpath
 }
 
@@ -97,12 +97,30 @@ function getVariable{
         [Parameter(Mandatory = $true)][EnvironmentVariableTarget]$scope
     )
 
-    $var = [Environment]::GetEnvironmentVariable($envvar, $scope)
+    $var = getEnvironmentVariable $envvar $scope
     if(!$var)
     {
         throw [VariableNotFoundException]::new()
     }
     $var
+}
+
+function setEnvironmentVariable
+{
+    Param(
+        [string]$EnvironmentVariable,
+        [string]$Value,
+        [EnvironmentVariableTarget]$Scope
+    )
+    [Environment]::SetEnvironmentVariable($EnvironmentVariable, $Value, $Scope)
+}
+
+function getEnvironmentVariable {
+    Param(
+        [string]$EnvironmentVariable,
+        [EnvironmentVariableTarget]$Scope
+    )
+    [Environment]::GetEnvironmentVariable($EnvironmentVariable, $Scope)
 }
 
 if (!$TESTMODE) {
