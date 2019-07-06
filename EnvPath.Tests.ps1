@@ -40,4 +40,19 @@ Describe "Get-EnvPath tests" {
             $actual.Scope | Should Be User
         }
     }
+    Context "Implicit variable exists at Process scope only" {
+        Mock -ModuleName EnvPath getEnvironmentVariable -MockWith { 
+            Param ($Variable, $Scope)
+            if ($Scope -eq [EnvironmentVariableTarget]::Process) {
+                return "C:\"
+            }
+        }
+        $actual = Get-EnvPath
+        It "Path is correct" {
+            $actual.Path | Should Be "C:\"
+        }
+        It "Scope is correct" {
+            $actual.Scope | Should Be Process
+        }
+    }
 }

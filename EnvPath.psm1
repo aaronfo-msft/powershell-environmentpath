@@ -1,4 +1,4 @@
-using namespace System;
+﻿using namespace System;
 
 #Safety net
 [bool]$TESTMODE = ("TESTMODE" -eq $args[0]) -or ($Host.Name -eq "Visual Studio Code Host")
@@ -37,27 +37,22 @@ function Get-EnvPath {
         [string] $EnvironmentVariable = $DefaultEnvironmentVariable
     )
 
-    try
-    {
-        getPathArray -envvar $EnvironmentVariable -scope Machine
-    }
-    catch [VariableNotFoundException]
-    {
-        $machineException = $_
-    }
-
-    try
-    {
-        getPathArray -envvar $EnvironmentVariable -scope User
-    }
-    catch [VariableNotFoundException]
-    {
-        $userException = $_
+    $allScopes = @([EnvironmentVariableTarget]::Machine, [EnvironmentVariableTarget]::User, [EnvironmentVariableTarget]::Process)
+    $exceptionCount = 0
+    $allScopes | ForEach-Object {
+        try {
+            getPathArray -envvar $EnvironmentVariable -scope $_
+        }
+        catch [VariableNotFoundException] {
+            $exceptionCount++
+            if(!$firstException) {
+                $firstException = $_
+            }
+        }
     }
     
-    if ($machineException -and $userException)
-    {
-        throw $machineException
+    if ($exceptionCount -eq $allScopes.Count) {
+        throw $firstException
     }
 }
 
