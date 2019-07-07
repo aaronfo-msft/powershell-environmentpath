@@ -1,4 +1,4 @@
-using namespace System;
+﻿using namespace System;
 
 #Safety net
 [bool]$TESTMODE = ("TESTMODE" -eq $args[0]) -or ($Host.Name -eq "Visual Studio Code Host")
@@ -44,6 +44,10 @@ function Get-EnvPath {
         try {
             $scope = $_
             getPathArray -envvar $EnvironmentVariable -scope $scope | ForEach-Object {
+                if (!$_) {
+                    return
+                }
+
                 if (!($resultsHash[$_])) {
                     $resultsHash[$_] = [ordered]@{ }
                 }

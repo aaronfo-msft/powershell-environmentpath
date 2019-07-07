@@ -99,4 +99,26 @@ Describe "Get-EnvPath tests" {
             }
         }
     }
+    Context "Implicit variable; hide empty paths" {
+        Mock -ModuleName EnvPath getEnvironmentVariable -MockWith { 
+            Param ($Variable, $Scope)
+            return @{ Machine = ";C:\;C:\"; User = "C:\;;C:\"; Process = "C:\;C:\;" }["$Scope"]
+        }
+        $actual = @(Get-EnvPath)
+        It "Result has only one element" {
+            $actual.Count | Should Be 1
+        }
+        It "Path is correct" {
+            $actual[0].Path | Should Be "C:\"
+        }
+        It "Scope has three elements" {
+            $actual[0].Scope.Count | Should Be 3
+        }
+        for ($i = 0; $i -lt 3; $i++) {
+            $scopeToCheck = $AllScopesOrdered[$i]
+            It "Scope contains $scopeToCheck" {
+                $actual[0].Scope[$i] | Should Be $scopeToCheck
+            }
+        }
+    }
 }
