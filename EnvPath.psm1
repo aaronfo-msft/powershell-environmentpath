@@ -1,4 +1,4 @@
-﻿using namespace System;
+using namespace System;
 
 #Safety net
 [bool]$TESTMODE = ("TESTMODE" -eq $args[0]) -or ($Host.Name -eq "Visual Studio Code Host")
@@ -44,11 +44,11 @@ function Get-EnvPath {
         try {
             $scope = $_
             getPathArray -envvar $EnvironmentVariable -scope $scope | ForEach-Object {
-                if (!($resultsHash[$_.Path])) {
-                    $resultsHash[$_.Path] = [ordered]@{ }
+                if (!($resultsHash[$_])) {
+                    $resultsHash[$_] = [ordered]@{ }
                 }
 
-                ($resultsHash[$_.Path])[$scope] = $true
+                ($resultsHash[$_])[$scope] = $true
             }
         }
         catch [VariableNotFoundException] {
@@ -92,7 +92,7 @@ function getPathArray {
         [Parameter(Mandatory = $true)][string]$envvar, 
         [Parameter(Mandatory = $true)][EnvironmentVariableTarget]$scope
     )
-    (getTrimmedPath -envvar $EnvironmentVariable -scope $scope) -split ';' | ForEach-Object { New-Object PSObject -Property @{Path = $_; Scope = $scope } } 
+    (getTrimmedPath -envvar $EnvironmentVariable -scope $scope) -split ';' 
 }
 
 function getVariable {
