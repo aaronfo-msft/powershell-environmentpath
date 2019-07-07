@@ -3,6 +3,8 @@ using namespace System;
 Remove-Module EnvPath
 Import-Module .\EnvPath.psm1 -Force
 
+$AllScopesOrdered = @([EnvironmentVariableTarget]::Machine, [EnvironmentVariableTarget]::User, [EnvironmentVariableTarget]::Process)
+
 Describe "Get-EnvPath tests" {
     Context "Implicit variable does not exist in any scope" {
         Mock -ModuleName EnvPath getEnvironmentVariable -MockWith { "" }
@@ -53,6 +55,27 @@ Describe "Get-EnvPath tests" {
         }
         It "Scope is correct" {
             $actual.Scope | Should Be Process
+        }
+    }
+    Context "Implicit variable exists in all scopes" {
+        Mock -ModuleName EnvPath getEnvironmentVariable -MockWith { 
+            return "C:\"
+        }
+        $actual = @(Get-EnvPath)
+        It "Result has only one element" {
+            $actual.Count | Should Be 1
+        }
+        It "Path is correct" {
+            $actual[0].Path | Should Be "C:\"
+        }
+        It "Scope has three elements" {
+            $actual[0].Scope.Count | Should Be 3
+        }
+        for ($i = 0; $i -lt 3; $i++) {
+            $scopeToCheck = $AllScopesOrdered[$i]
+            It "Scope contains $scopeToCheck" {
+                $actual[0].Scope[$i] | Should Be $scopeToCheck
+            }
         }
     }
 }

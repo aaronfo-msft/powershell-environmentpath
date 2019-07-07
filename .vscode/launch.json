@@ -5,6 +5,14 @@
     "version": "0.2.0",
     "configurations": [
         {
+            "name": "Run all tests",
+            "type": "PowerShell",
+            "request": "launch",
+            "script": "Invoke-Pester",
+            "args": [],
+            "cwd" : "${workspaceFolder}"
+        },
+        {
             "name": "Reload",
             "type": "PowerShell",
             "request": "launch",

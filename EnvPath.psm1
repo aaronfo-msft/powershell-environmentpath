@@ -39,9 +39,17 @@ function Get-EnvPath {
 
     $allScopes = @([EnvironmentVariableTarget]::Machine, [EnvironmentVariableTarget]::User, [EnvironmentVariableTarget]::Process)
     $exceptionCount = 0
+    $hash = [ordered]@{ }
     $allScopes | ForEach-Object {
         try {
-            getPathArray -envvar $EnvironmentVariable -scope $_
+            $scope = $_
+            getPathArray -envvar $EnvironmentVariable -scope $scope | ForEach-Object {
+                if (!($hash[$_.Path])) {
+                    $hash[$_.Path] = [Collections.ArrayList]::new()
+                }
+
+                $hash[$_.Path].Add($scope) | Out-Null
+            }
         }
         catch [VariableNotFoundException] {
             $exceptionCount++
@@ -54,6 +62,8 @@ function Get-EnvPath {
     if ($exceptionCount -eq $allScopes.Count) {
         throw $firstException
     }
+    
+    $hash.Keys | ForEach-Object { New-Object psobject -Property @{Path = $_; Scope = $hash[$_] } }
 }
 
 function Update-EnvPath {
