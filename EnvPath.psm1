@@ -45,10 +45,10 @@ function Get-EnvPath {
             $scope = $_
             getPathArray -envvar $EnvironmentVariable -scope $scope | ForEach-Object {
                 if (!($hash[$_.Path])) {
-                    $hash[$_.Path] = [Collections.ArrayList]::new()
+                    $hash[$_.Path] = [ordered]@{ }
                 }
 
-                $hash[$_.Path].Add($scope) | Out-Null
+                ($hash[$_.Path])[$scope] = $true
             }
         }
         catch [VariableNotFoundException] {
@@ -63,7 +63,7 @@ function Get-EnvPath {
         throw $firstException
     }
     
-    $hash.Keys | ForEach-Object { New-Object psobject -Property @{Path = $_; Scope = $hash[$_] } }
+    $hash.Keys | ForEach-Object { New-Object psobject -Property @{Path = $_; Scope = @($hash[$_].Keys) } }
 }
 
 function Update-EnvPath {
