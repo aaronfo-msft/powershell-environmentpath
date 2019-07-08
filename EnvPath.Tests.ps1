@@ -123,19 +123,30 @@ Describe "Get-EnvPath tests" {
     }
 }
 
-Describe "Add-EnvPath tests" -Tags "Add-EnvPath" {
+
+function DoBasicAddEnvPathTest {
+    $result = Add-EnvPath
+    It "Nothing returned" {
+        $result | Should Be $null
+    }
+    It "Verifiable mocks called" {
+        Assert-VerifiableMocks
+    }
+}
+
+Describe "Add-EnvPath tests, Implicit scope and implicit path" -Tags "Add-EnvPath" {
     Mock -ModuleName EnvPath setEnvironmentVariable { } #safety net
-    Context "Implicit scope and implicit path" {
-        Mock -ModuleName EnvPath Get-Location { return @{Path = "C:\" } }
+    Mock -ModuleName EnvPath Get-Location { return @{Path = "C:\" } }
+    Context "No pre-existing paths" {
         Mock -ModuleName EnvPath getEnvironmentVariable { return "" }
         Mock -ModuleName EnvPath setEnvironmentVariable { } -Verifiable -ParameterFilter { $Value -eq "C:\" -and $Scope -eq "User" }
         Mock -ModuleName EnvPath setEnvironmentVariable { } -Verifiable -ParameterFilter { $Value -eq "C:\" -and $Scope -eq "Process" }
-        $result = Add-EnvPath
-        It "Nothing returned" {
-            $result | Should Be $null
-        }
-        It "Verifiable mocks called" {
-            Assert-VerifiableMocks
-        }
+        DoBasicAddEnvPathTest
+    }
+    Context "Process contains more paths than User" {
+        Mock -ModuleName EnvPath getEnvironmentVariable { return @{ User = "C:\foo"; Process = "C:\foo;C:\bar" }["$Scope"] }
+        Mock -ModuleName EnvPath setEnvironmentVariable { } -Verifiable -ParameterFilter { $Value -eq "C:\foo;C:\" -and $Scope -eq "User" }
+        Mock -ModuleName EnvPath setEnvironmentVariable { } -Verifiable -ParameterFilter { $Value -eq "C:\foo;C:\bar;C:\" -and $Scope -eq "Process" }
+        DoBasicAddEnvPathTest
     }
 }

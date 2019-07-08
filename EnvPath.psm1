@@ -18,11 +18,12 @@ function Add-EnvPath() {
     )
 
     try {
-        $current = (getEnvironmentVariable -envvar $EnvironmentVariable -scope User).TrimEnd(";") + ";"
+        $userCurrent = (getEnvironmentVariable -envvar $EnvironmentVariable -scope User).TrimEnd(";") + ";"
+        $processCurrent = (getEnvironmentVariable -envvar $EnvironmentVariable -scope Process).TrimEnd(";") + ";"
     }
     catch { }
 
-    if (($current -split ";").Contains($Path)) {
+    if (($userCurrent -split ";").Contains($Path)) {
         throw "The current environment path already contains '" + $Path + "'"
     }
 
@@ -30,9 +31,8 @@ function Add-EnvPath() {
         return
     }
 
-    $newPath = ($current + $Path).trim(";")
-    setEnvironmentVariable $EnvironmentVariable $newPath User
-    setEnvironmentVariable $EnvironmentVariable $newPath Process
+    setEnvironmentVariable $EnvironmentVariable ($userCurrent + $Path).trim(";") User
+    setEnvironmentVariable $EnvironmentVariable ($processCurrent + $Path).trim(";") Process
 }
 
 function Get-EnvPath {
