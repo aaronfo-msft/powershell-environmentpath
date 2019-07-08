@@ -1,4 +1,4 @@
-﻿using namespace System;
+using namespace System;
 
 #Safety net
 [bool]$TESTMODE = ("TESTMODE" -eq $args[0]) -or ($Host.Name -eq "Visual Studio Code Host")
@@ -7,24 +7,23 @@
 class VariableNotFoundException : Exception { }
 
 function Add-EnvPath() {
+    [CmdletBinding(
+        SupportsShouldProcess = $true,
+        ConfirmImpact = 'Low')]
     Param (
         [Parameter(Position = 0)]
         [ValidateScript( { Test-Path $_ })]
         [string] $Path = (Get-Location).Path,
-        [string] $EnvironmentVariable = $DefaultEnvironmentVariable,
-        [switch] $Force = $false
+        [string] $EnvironmentVariable = $DefaultEnvironmentVariable
     )
 
     if (((Get-EnvPath $EnvironmentVariable) | Where-Object { $_.Path -eq $Path }).count -ne 0) {
         throw "The current environment path already contains '" + $Path + "'"
     }
 
-    if (!$Force) {
-        $prompt = $Host.UI.PromptForChoice("This operation will globally modify the $EnvironmentVariable environment variable for the current user.", "Continue?", ("&Yes", "&No"), 1)
-        if ($prompt -eq 1) {
+    if (!$PSCmdlet.ShouldProcess($Path)) {
             return
         }
-    }
 
     $newPath = (getTrimmedPath -envvar $EnvironmentVariable -scope User) + ";" + $Path
     setEnvironmentVariable $EnvironmentVariable $newPath [EnvironmentVariableTarget]::User
