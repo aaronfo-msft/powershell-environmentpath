@@ -1,4 +1,4 @@
-using namespace System;
+﻿using namespace System;
 
 #Safety net
 [bool]$TESTMODE = ("TESTMODE" -eq $args[0]) -or ($Host.Name -eq "Visual Studio Code Host")
@@ -17,18 +17,22 @@ function Add-EnvPath() {
         [string] $EnvironmentVariable = $DefaultEnvironmentVariable
     )
 
-    if (((Get-EnvPath $EnvironmentVariable) | Where-Object { $_.Path -eq $Path }).count -ne 0) {
+    try {
+        $current = (getEnvironmentVariable -envvar $EnvironmentVariable -scope User).TrimEnd(";") + ";"
+    }
+    catch { }
+
+    if (($current -split ";").Contains($Path)) {
         throw "The current environment path already contains '" + $Path + "'"
     }
 
     if (!$PSCmdlet.ShouldProcess($Path)) {
-            return
-        }
+        return
+    }
 
-    $newPath = (getTrimmedPath -envvar $EnvironmentVariable -scope User) + ";" + $Path
-    setEnvironmentVariable $EnvironmentVariable $newPath [EnvironmentVariableTarget]::User
-    Update-EnvPath
-    New-Object PSObject -Property @{Path = $Path; Scope = "User" }
+    $newPath = ($current + $Path).trim(";")
+    setEnvironmentVariable $EnvironmentVariable $newPath User
+    setEnvironmentVariable $EnvironmentVariable $newPath Process
 }
 
 function Get-EnvPath {

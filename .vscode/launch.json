@@ -13,6 +13,14 @@
             "cwd" : "${workspaceFolder}"
         },
         {
+            "name": "Run Add-EnvPath tests",
+            "type": "PowerShell",
+            "request": "launch",
+            "script": "Invoke-Pester",
+            "args": ["-Tag 'Add-EnvPath'"],
+            "cwd" : "${workspaceFolder}"
+        },
+        {
             "name": "Reload",
             "type": "PowerShell",
             "request": "launch",

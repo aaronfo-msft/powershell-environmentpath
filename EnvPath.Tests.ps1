@@ -122,3 +122,20 @@ Describe "Get-EnvPath tests" {
         }
     }
 }
+
+Describe "Add-EnvPath tests" -Tags "Add-EnvPath" {
+    Mock -ModuleName EnvPath setEnvironmentVariable { } #safety net
+    Context "Implicit scope and implicit path" {
+        Mock -ModuleName EnvPath Get-Location { return @{Path = "C:\" } }
+        Mock -ModuleName EnvPath getEnvironmentVariable { return "" }
+        Mock -ModuleName EnvPath setEnvironmentVariable { } -Verifiable -ParameterFilter { $Value -eq "C:\" -and $Scope -eq "User" }
+        Mock -ModuleName EnvPath setEnvironmentVariable { } -Verifiable -ParameterFilter { $Value -eq "C:\" -and $Scope -eq "Process" }
+        $result = Add-EnvPath
+        It "Nothing returned" {
+            $result | Should Be $null
+        }
+        It "Verifiable mocks called" {
+            Assert-VerifiableMocks
+        }
+    }
+}
