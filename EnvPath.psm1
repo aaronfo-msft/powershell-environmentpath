@@ -32,8 +32,11 @@ function Add-EnvPath() {
     }
 
     setEnvironmentVariable $EnvironmentVariable ($userCurrent + $Path).trim(";") User
-    setEnvironmentVariable $EnvironmentVariable ($processCurrent + $Path).trim(";") Process
-}
+
+    if (!(($processCurrent -split ";").Contains($Path))) {
+        setEnvironmentVariable $EnvironmentVariable ($processCurrent + $Path).trim(";") Process
+    }
+} 
 
 function Get-EnvPath {
     Param (

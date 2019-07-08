@@ -149,4 +149,19 @@ Describe "Add-EnvPath tests, Implicit scope and implicit path" -Tags "Add-EnvPat
         Mock -ModuleName EnvPath setEnvironmentVariable { } -Verifiable -ParameterFilter { $Value -eq "C:\foo;C:\bar;C:\" -and $Scope -eq "Process" }
         DoBasicAddEnvPathTest
     }
+    Context "Process already contains path, User does not" {
+        Mock -ModuleName EnvPath getEnvironmentVariable { return @{ User = "C:\foo"; Process = "C:\foo;C:\bar;C:\" }["$Scope"] }
+        Mock -ModuleName EnvPath setEnvironmentVariable { } -Verifiable -ParameterFilter { $Value -eq "C:\foo;C:\" -and $Scope -eq "User" }
+        Mock -ModuleName EnvPath setEnvironmentVariable { } -Verifiable -ParameterFilter { $Scope -eq "Process" }
+        $result = Add-EnvPath
+        It "Nothing returned" {
+            $result | Should Be $null
+        }
+        It "User path set" {
+            Assert-MockCalled -ModuleName EnvPath setEnvironmentVariable -Times 1 -ParameterFilter { $Value -eq "C:\foo;C:\" -and $Scope -eq "User" }
+        }
+        It "Process path not set" {
+            Assert-MockCalled -ModuleName EnvPath setEnvironmentVariable -Times 0 -ParameterFilter { $Scope -eq "Process" }
+        }
+    }
 }
