@@ -1,8 +1,7 @@
 ﻿using namespace System;
 
 #Safety net
-[bool]$TESTMODE = ("TESTMODE" -eq $args[0]) -or ($Host.Name -eq "Visual Studio Code Host")
-[string]$DefaultEnvironmentVariable = if ($TESTMODE) { "TEST_PATH" } else { "PATH" }
+[string]$PathEnvironmentVariable = if ($Host.Name -eq "Visual Studio Code Host") { "TEST_PATH" } else { "PATH" }
 
 class VariableNotFoundException : Exception {
     VariableNotFoundException([string]$message) : base($message) { }
@@ -15,13 +14,12 @@ function Add-EnvPath() {
     Param (
         [Parameter(Position = 0)]
         [ValidateScript( { Test-Path $_ })]
-        [string] $Path = (Get-Location).Path,
-        [string] $EnvironmentVariable = $DefaultEnvironmentVariable
+        [string] $Path = (Get-Location).Path
     )
 
     try {
-        $userCurrent = (getEnvironmentVariable -envvar $EnvironmentVariable -scope User).TrimEnd(";") + ";"
-        $processCurrent = (getEnvironmentVariable -envvar $EnvironmentVariable -scope Process).TrimEnd(";") + ";"
+        $userCurrent = (getEnvironmentVariable -scope User).TrimEnd(";") + ";"
+        $processCurrent = (getEnvironmentVariable -scope Process).TrimEnd(";") + ";"
     }
     catch { }
 
@@ -33,25 +31,21 @@ function Add-EnvPath() {
         return
     }
 
-    setEnvironmentVariable $EnvironmentVariable ($userCurrent + $Path).trim(";") User
+    setEnvironmentVariable ($userCurrent + $Path).trim(";") User
 
     if (!(($processCurrent -split ";").Contains($Path))) {
-        setEnvironmentVariable $EnvironmentVariable ($processCurrent + $Path).trim(";") Process
+        setEnvironmentVariable ($processCurrent + $Path).trim(";") Process
     }
 } 
 
 function Get-EnvPath {
-    Param (
-        [string] $EnvironmentVariable = $DefaultEnvironmentVariable
-    )
-
     $allScopes = @([EnvironmentVariableTarget]::Machine, [EnvironmentVariableTarget]::User, [EnvironmentVariableTarget]::Process)
     $exceptionCount = 0
     $resultsHash = [ordered]@{ }
     $allScopes | ForEach-Object {
         try {
             $scope = $_
-            getPathArray -envvar $EnvironmentVariable -scope $scope | ForEach-Object {
+            getPathArray -scope $scope | ForEach-Object {
                 if (!$_) {
                     return
                 }
@@ -83,37 +77,28 @@ function Update-EnvPath {
         [string] $EnvironmentVariable = $DefaultEnvironmentVariable
     )
 
-    $machine = getTrimmedPath -envvar $EnvironmentVariable -scope Machine
-    $user = getTrimmedPath -envvar $EnvironmentVariable -scope User
-    $process = getTrimmedPath -envvar $EnvironmentVariable -scope Process
+    $machine = getTrimmedPath -scope Machine
+    $user = getTrimmedPath -scope User
+    $process = getTrimmedPath -scope Process
     $newpath = ($machine + ';' + $user + ';' + $process).trim(';');
     setEnvironmentVariable $EnvironmentVariable $newpath [EnvironmentVariableTarget]::Process
     Set-Item -Path Env:$EnvironmentVariable -Value $newpath
 }
 
 function getTrimmedPath {
-    Param (
-        [Parameter(Mandatory = $true)][string]$envvar, 
-        [Parameter(Mandatory = $true)][EnvironmentVariableTarget]$scope
-    )
-    (getVariable -envvar $envvar -scope $scope).trim(";")
+    Param ([Parameter(Mandatory = $true)][EnvironmentVariableTarget]$scope)
+    (getVariable -scope $scope).trim(";")
 }
 
 function getPathArray {
-    Param (
-        [Parameter(Mandatory = $true)][string]$envvar, 
-        [Parameter(Mandatory = $true)][EnvironmentVariableTarget]$scope
-    )
-    (getTrimmedPath -envvar $EnvironmentVariable -scope $scope) -split ';' 
+    Param ([Parameter(Mandatory = $true)][EnvironmentVariableTarget]$scope)
+    (getTrimmedPath -scope $scope) -split ';' 
 }
 
 function getVariable {
-    Param (
-        [Parameter(Mandatory = $true)][string]$envvar, 
-        [Parameter(Mandatory = $true)][EnvironmentVariableTarget]$scope
-    )
+    Param ([Parameter(Mandatory = $true)][EnvironmentVariableTarget]$scope)
 
-    $var = getEnvironmentVariable $envvar $scope
+    $var = getEnvironmentVariable $scope
     if (!$var) {
         throw [VariableNotFoundException]::new("Environment variable ""$envvar"" does not exist")
     }
@@ -122,21 +107,15 @@ function getVariable {
 
 function setEnvironmentVariable {
     Param(
-        [string]$EnvironmentVariable,
         [string]$Value,
         [EnvironmentVariableTarget]$Scope
     )
-    [Environment]::SetEnvironmentVariable($EnvironmentVariable, $Value, $Scope)
+    [Environment]::SetEnvironmentVariable($PathEnvironmentVariable, $Value, $Scope)
 }
 
 function getEnvironmentVariable {
-    Param(
-        [string]$EnvironmentVariable,
-        [EnvironmentVariableTarget]$Scope
-    )
-    [Environment]::GetEnvironmentVariable($EnvironmentVariable, $Scope)
+    Param([EnvironmentVariableTarget]$Scope)
+    [Environment]::GetEnvironmentVariable($PathEnvironmentVariable, $Scope)
 }
 
-if (!$TESTMODE) {
-    Export-ModuleMember -Function Add-EnvPath, Get-EnvPath
-}
+Export-ModuleMember -Function Add-EnvPath, Get-EnvPath
