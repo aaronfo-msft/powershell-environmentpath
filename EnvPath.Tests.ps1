@@ -134,7 +134,7 @@ function DoBasicAddEnvPathTest {
     }
 }
 
-Describe "Add-EnvPath tests, Implicit scope and implicit path" -Tags "Add-EnvPath" {
+Describe "Add-EnvPath tests" -Tags "Add-EnvPath" {
     Mock -ModuleName EnvPath setRawPath { } #safety net
     Mock -ModuleName EnvPath Get-Location { return @{Path = "C:\" } }
     Context "No pre-existing paths" {
@@ -162,6 +162,12 @@ Describe "Add-EnvPath tests, Implicit scope and implicit path" -Tags "Add-EnvPat
         }
         It "Process path not set" {
             Assert-MockCalled -ModuleName EnvPath setRawPath -Times 0 -ParameterFilter { $Scope -eq "Process" }
+        }
+    }
+    Context "Explicit path doesn't exist" {
+        It "Throws" {
+            $guid = New-Guid
+            { Add-EnvPath "C:\$guid" } | Should Throw
         }
     }
 }
