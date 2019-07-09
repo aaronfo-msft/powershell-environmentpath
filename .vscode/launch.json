@@ -35,22 +35,6 @@
             "script": "Import-Module",
             "args": [".\\EnvPath.psm1 -Force -ArgumentList \"TESTMODE\""],
             "cwd": "${file}"
-        },
-        {
-            "name": "Get-EnvPath",
-            "type": "PowerShell",
-            "request": "launch",
-            "script": "$LAUNCHSCRIPT=\"Get-EnvPath -EnvironmentVariable TEST_PATH\"",
-            "args": [";Import-Module .\\EnvPath.psm1 -Force -ArgumentList \"TEST_PATH\"; Invoke-Expression $LAUNCHSCRIPT"],
-            "cwd": "${file}" 
-        },
-        {
-            "name": "Get-EnvPath",
-            "type": "PowerShell",
-            "request": "launch",
-            "script": "$run=\"Get-EnvPath\"",
-            "args": [";Import-Module .\\EnvPath.psm1 -Force; Invoke-Expression $run"],
-            "cwd": "${file}"
         }
     ]
 }
