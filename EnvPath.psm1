@@ -69,12 +69,7 @@ function Get-EnvPath {
 }
 
 function Update-EnvPath {
-    $pathSet = [ordered]@{ }
-    ((getPathArray Machine) + (getPathArray User) + (getPathArray Process)) | ForEach-Object {
-        $pathSet[$_] = $true
-    }
-
-    $newPath = @($pathSet.Keys) -join ";"
+    $newPath = @((Get-EnvPath).Path) -join ";"
     setRawPath $newPath Process
 }
 

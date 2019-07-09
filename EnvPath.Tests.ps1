@@ -155,4 +155,25 @@ Describe "Update-EnvPath tests" -Tags "Update-EnvPath" {
             Assert-MockCalled -ModuleName EnvPath setRawPath -Times 0 -ParameterFilter { $Scope -eq "Machine" -or $Scope -eq "User" }
         }
     }
+    Context "Variable is empty in all scopes" {
+        Mock -ModuleName EnvPath getRawPath { return "" }
+        It "Throws" {
+            { Update-EnvPath } | Should Throw
+        }
+        It "Does not call set" {
+            Assert-MockCalled -ModuleName EnvPath setRawPath -Times 0
+        } 
+    }
+    Context "Variable exists in all but Machine scope" {
+        Mock -ModuleName EnvPath getRawPath { return @{ Machine = ""; User = "somepath"; Process = "somepath" }["$Scope"] }
+        Mock -ModuleName EnvPath setRawPath { } -Verifiable -ParameterFilter { $Value -eq "somepath" -and $Scope -eq "Process" }
+        Mock -ModuleName EnvPath setRawPath { } -Verifiable -ParameterFilter { $Scope -eq "Machine" -or $Scope -eq "User" }
+        Update-EnvPath
+        It "Process path set" {
+            Assert-MockCalled -ModuleName EnvPath setRawPath -Times 1 -ParameterFilter { $Value -eq "somepath" -and $Scope -eq "Process" }
+        }
+        It "Neither Machine nor User paths set" {
+            Assert-MockCalled -ModuleName EnvPath setRawPath -Times 0 -ParameterFilter { $Scope -eq "Machine" -or $Scope -eq "User" }
+        } 
+    }
 }
