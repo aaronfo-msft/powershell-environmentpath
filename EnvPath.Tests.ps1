@@ -5,6 +5,25 @@ Import-Module .\EnvPath.psm1 -Force
 
 $AllScopesOrdered = @([EnvironmentVariableTarget]::Machine, [EnvironmentVariableTarget]::User, [EnvironmentVariableTarget]::Process)
 
+function DoAllScopeGetEnvPathTest {
+    $actual = @(Get-EnvPath)
+    It "Result has only one element" {
+        $actual.Count | Should Be 1
+    }
+    It "Path is correct" {
+        $actual[0].Path | Should Be "C:\"
+    }
+    It "Scope has three elements" {
+        $actual[0].Scope.Count | Should Be 3
+    }
+    for ($i = 0; $i -lt 3; $i++) {
+        $scopeToCheck = $AllScopesOrdered[$i]
+        It "Scope contains $scopeToCheck" {
+            $actual[0].Scope[$i] | Should Be $scopeToCheck
+        }
+    }
+}
+
 Describe "Get-EnvPath tests" {
     Context "Implicit variable does not exist in any scope" {
         Mock -ModuleName EnvPath getRawPath -MockWith { "" }
@@ -58,71 +77,19 @@ Describe "Get-EnvPath tests" {
         }
     }
     Context "Implicit variable exists in all scopes" {
-        Mock -ModuleName EnvPath getRawPath -MockWith { 
-            return "C:\"
-        }
-        $actual = @(Get-EnvPath)
-        It "Result has only one element" {
-            $actual.Count | Should Be 1
-        }
-        It "Path is correct" {
-            $actual[0].Path | Should Be "C:\"
-        }
-        It "Scope has three elements" {
-            $actual[0].Scope.Count | Should Be 3
-        }
-        for ($i = 0; $i -lt 3; $i++) {
-            $scopeToCheck = $AllScopesOrdered[$i]
-            It "Scope contains $scopeToCheck" {
-                $actual[0].Scope[$i] | Should Be $scopeToCheck
-            }
-        }
+        Mock -ModuleName EnvPath getRawPath -MockWith {  return "C:\" }
+        DoAllScopeGetEnvPathTest
     }
     Context "Implicit variable has duplicate entries" {
-        Mock -ModuleName EnvPath getRawPath -MockWith { 
-            return "C:\;C:\"
-        }
-        $actual = @(Get-EnvPath)
-        It "Result has only one element" {
-            $actual.Count | Should Be 1
-        }
-        It "Path is correct" {
-            $actual[0].Path | Should Be "C:\"
-        }
-        It "Scope has three elements" {
-            $actual[0].Scope.Count | Should Be 3
-        }
-        for ($i = 0; $i -lt 3; $i++) {
-            $scopeToCheck = $AllScopesOrdered[$i]
-            It "Scope contains $scopeToCheck" {
-                $actual[0].Scope[$i] | Should Be $scopeToCheck
-            }
-        }
+        Mock -ModuleName EnvPath getRawPath -MockWith {  return "C:\;C:\" }
+        DoAllScopeGetEnvPathTest
     }
+
     Context "Implicit variable; hide empty paths" {
-        Mock -ModuleName EnvPath getRawPath -MockWith { 
-            Param ($Variable, $Scope)
-            return @{ Machine = ";C:\;C:\"; User = "C:\;;C:\"; Process = "C:\;C:\;" }["$Scope"]
-        }
-        $actual = @(Get-EnvPath)
-        It "Result has only one element" {
-            $actual.Count | Should Be 1
-        }
-        It "Path is correct" {
-            $actual[0].Path | Should Be "C:\"
-        }
-        It "Scope has three elements" {
-            $actual[0].Scope.Count | Should Be 3
-        }
-        for ($i = 0; $i -lt 3; $i++) {
-            $scopeToCheck = $AllScopesOrdered[$i]
-            It "Scope contains $scopeToCheck" {
-                $actual[0].Scope[$i] | Should Be $scopeToCheck
-            }
-        }
+        Mock -ModuleName EnvPath getRawPath -MockWith {  return @{ Machine = ";C:\;C:\"; User = "C:\;;C:\"; Process = "C:\;C:\;" }["$Scope"] }
+        DoAllScopeGetEnvPathTest
     }
 }
-
 
 function DoBasicAddEnvPathTest {
     $result = Add-EnvPath
