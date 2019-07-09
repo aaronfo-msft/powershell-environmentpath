@@ -5,7 +5,7 @@
     "version": "0.2.0",
     "configurations": [
         {
-            "name": "Run all tests",
+            "name": "All tests",
             "type": "PowerShell",
             "request": "launch",
             "script": "Invoke-Pester",
@@ -13,7 +13,7 @@
             "cwd" : "${workspaceFolder}"
         },
         {
-            "name": "Run Add-EnvPath tests",
+            "name": "Add-EnvPath tests",
             "type": "PowerShell",
             "request": "launch",
             "script": "Invoke-Pester",
@@ -21,7 +21,7 @@
             "cwd" : "${workspaceFolder}"
         },
         {
-            "name": "Run Update-EnvPath tests",
+            "name": "Update-EnvPath tests",
             "type": "PowerShell",
             "request": "launch",
             "script": "Invoke-Pester",
