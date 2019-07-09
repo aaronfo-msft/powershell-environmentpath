@@ -27,8 +27,9 @@ function DoAllScopeGetEnvPathTest {
 Describe "Get-EnvPath tests" {
     Context "Implicit variable does not exist in any scope" {
         Mock -ModuleName EnvPath getRawPath -MockWith { "" }
+        Mock -ModuleName EnvPath getVariableName -MockWith { "MOCK_PATH" }
         It "Throws" {
-            { Get-EnvPath } | Should Throw "does not exist"
+            { Get-EnvPath } | Should Throw "Environment variable ""MOCK_PATH"" does not exist"
         }
     }
     Context "Implicit variable exists at Machine scope only" {

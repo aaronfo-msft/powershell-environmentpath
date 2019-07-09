@@ -1,11 +1,6 @@
 ﻿using namespace System;
 
-#Safety net
-[string]$PathEnvironmentVariable = if ($Host.Name -eq "Visual Studio Code Host") { "TEST_PATH" } else { "PATH" }
-
-class VariableNotFoundException : Exception {
-    VariableNotFoundException([string]$message) : base($message) { }
-}
+class VariableNotFoundException : Exception { }
 
 function Add-EnvPath() {
     [CmdletBinding(
@@ -66,7 +61,8 @@ function Get-EnvPath {
     }
     
     if ($exceptionCount -eq $allScopes.Count) {
-        throw $firstException
+        $variableName = getVariableName
+        throw "Environment variable ""$variableName"" does not exist"
     }
     
     $resultsHash.Keys | ForEach-Object { New-Object psobject -Property @{Path = $_; Scope = @($resultsHash[$_].Keys) } }
@@ -86,9 +82,14 @@ function getPathArray {
     Param ([Parameter(Mandatory = $true)][EnvironmentVariableTarget]$scope)
     $var = getRawPath $scope
     if (!$var) {
-        throw [VariableNotFoundException]::new("Environment variable ""$envvar"" does not exist")
+        throw [VariableNotFoundException]::new()
     }
     $var.trim(";") -split ';'
+}
+
+function getVariableName {
+    #Safety net
+    if ($Host.Name -eq "Visual Studio Code Host") { "TEST_PATH" } else { "PATH" }
 }
 
 function setRawPath {
@@ -96,12 +97,12 @@ function setRawPath {
         [string]$Value,
         [EnvironmentVariableTarget]$Scope
     )
-    [Environment]::SetEnvironmentVariable($PathEnvironmentVariable, $Value, $Scope)
+    [Environment]::SetEnvironmentVariable((getVariableName), $Value, $Scope)
 }
 
 function getRawPath {
     Param([EnvironmentVariableTarget]$Scope)
-    [Environment]::GetEnvironmentVariable($PathEnvironmentVariable, $Scope)
+    [Environment]::GetEnvironmentVariable((getVariableName), $Scope)
 }
 
 Export-ModuleMember -Function Add-EnvPath, Get-EnvPath, Update-EnvPath
