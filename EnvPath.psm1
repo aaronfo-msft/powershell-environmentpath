@@ -13,7 +13,7 @@ function Add-EnvPath() {
         ConfirmImpact = 'Low')]
     Param (
         [Parameter(Position = 0)]
-        [ValidateScript({ Test-Path $_ })]
+        [ValidateScript( { Test-Path $_ } )]
         [string] $Path = (Get-Location).Path
     )
 
