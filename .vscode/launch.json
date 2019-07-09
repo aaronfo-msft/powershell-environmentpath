@@ -21,6 +21,14 @@
             "cwd" : "${workspaceFolder}"
         },
         {
+            "name": "Run Update-EnvPath tests",
+            "type": "PowerShell",
+            "request": "launch",
+            "script": "Invoke-Pester",
+            "args": ["-Tag 'Update-EnvPath'"],
+            "cwd" : "${workspaceFolder}"
+        },
+        {
             "name": "Reload",
             "type": "PowerShell",
             "request": "launch",

@@ -73,16 +73,13 @@ function Get-EnvPath {
 }
 
 function Update-EnvPath {
-    Param (
-        [string] $EnvironmentVariable = $DefaultEnvironmentVariable
-    )
+    $pathSet = [ordered]@{ }
+    ((getPathArray Machine) + (getPathArray User) + (getPathArray Process)) | ForEach-Object {
+        $pathSet[$_] = $true
+    }
 
-    $machine = getTrimmedPath -scope Machine
-    $user = getTrimmedPath -scope User
-    $process = getTrimmedPath -scope Process
-    $newpath = ($machine + ';' + $user + ';' + $process).trim(';');
-    setRawPath $EnvironmentVariable $newpath [EnvironmentVariableTarget]::Process
-    Set-Item -Path Env:$EnvironmentVariable -Value $newpath
+    $newPath = @($pathSet.Keys) -join ";"
+    setRawPath $newPath Process
 }
 
 function getTrimmedPath {
@@ -118,4 +115,4 @@ function getRawPath {
     [Environment]::GetEnvironmentVariable($PathEnvironmentVariable, $Scope)
 }
 
-Export-ModuleMember -Function Add-EnvPath, Get-EnvPath
+Export-ModuleMember -Function Add-EnvPath, Get-EnvPath, Update-EnvPath

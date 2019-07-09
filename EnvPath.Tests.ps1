@@ -138,3 +138,20 @@ Describe "Add-EnvPath tests" -Tags "Add-EnvPath" {
         }
     }
 }
+
+Describe "Update-EnvPath tests" -Tags "Update-EnvPath" {
+    Mock -ModuleName EnvPath setRawPath { } #safety net
+    Context "Process has some but not all User and Machine paths" {
+        $expectedPath = "machineUnique;machineCommon;userUnique;userCommon;processUnique"
+        Mock -ModuleName EnvPath getRawPath { return @{ Machine = "machineUnique;machineCommon"; User = "userUnique;userCommon"; Process = "machineCommon;userCommon;processUnique" }["$Scope"] }
+        Mock -ModuleName EnvPath setRawPath { } -Verifiable -ParameterFilter { $Value -eq $expectedPath -and $Scope -eq "Process" }
+        Mock -ModuleName EnvPath setRawPath { } -Verifiable -ParameterFilter { $Scope -eq "Machine" -or $Scope -eq "User" }
+        Update-EnvPath | Should Be $null
+        It "Process path set" {
+            Assert-MockCalled -ModuleName EnvPath setRawPath -Times 1 -ParameterFilter { $Value -eq $expectedPath -and $Scope -eq "Process" }
+        }
+        It "Neither Machine nor User paths set" {
+            Assert-MockCalled -ModuleName EnvPath setRawPath -Times 0 -ParameterFilter { $Scope -eq "Machine" -or $Scope -eq "User" }
+        }
+    }
+}
