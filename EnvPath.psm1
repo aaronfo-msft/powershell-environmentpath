@@ -82,24 +82,13 @@ function Update-EnvPath {
     setRawPath $newPath Process
 }
 
-function getTrimmedPath {
-    Param ([Parameter(Mandatory = $true)][EnvironmentVariableTarget]$scope)
-    (getVariable -scope $scope).trim(";")
-}
-
 function getPathArray {
     Param ([Parameter(Mandatory = $true)][EnvironmentVariableTarget]$scope)
-    (getTrimmedPath -scope $scope) -split ';' 
-}
-
-function getVariable {
-    Param ([Parameter(Mandatory = $true)][EnvironmentVariableTarget]$scope)
-
     $var = getRawPath $scope
     if (!$var) {
         throw [VariableNotFoundException]::new("Environment variable ""$envvar"" does not exist")
     }
-    $var
+    $var.trim(";") -split ';'
 }
 
 function setRawPath {
