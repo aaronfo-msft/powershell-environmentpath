@@ -4,7 +4,9 @@
 [bool]$TESTMODE = ("TESTMODE" -eq $args[0]) -or ($Host.Name -eq "Visual Studio Code Host")
 [string]$DefaultEnvironmentVariable = if ($TESTMODE) { "TEST_PATH" } else { "PATH" }
 
-class VariableNotFoundException : Exception { }
+class VariableNotFoundException : Exception {
+    VariableNotFoundException([string]$message) : base($message) { }
+}
 
 function Add-EnvPath() {
     [CmdletBinding(
@@ -113,7 +115,7 @@ function getVariable {
 
     $var = getEnvironmentVariable $envvar $scope
     if (!$var) {
-        throw [VariableNotFoundException]::new()
+        throw [VariableNotFoundException]::new("Environment variable ""$envvar"" does not exist")
     }
     $var
 }

@@ -9,7 +9,7 @@ Describe "Get-EnvPath tests" {
     Context "Implicit variable does not exist in any scope" {
         Mock -ModuleName EnvPath getEnvironmentVariable -MockWith { "" }
         It "Throws" {
-            { Get-EnvPath } | Should Throw "Exception of type 'VariableNotFoundException' was thrown."
+            { Get-EnvPath } | Should Throw "does not exist"
         }
     }
     Context "Implicit variable exists at Machine scope only" {
