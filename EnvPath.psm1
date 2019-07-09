@@ -13,13 +13,13 @@ function Add-EnvPath() {
         ConfirmImpact = 'Low')]
     Param (
         [Parameter(Position = 0)]
-        [ValidateScript( { Test-Path $_ })]
+        [ValidateScript({ Test-Path $_ })]
         [string] $Path = (Get-Location).Path
     )
 
     try {
-        $userCurrent = (getEnvironmentVariable -scope User).TrimEnd(";") + ";"
-        $processCurrent = (getEnvironmentVariable -scope Process).TrimEnd(";") + ";"
+        $userCurrent = (getRawPath -scope User).TrimEnd(";") + ";"
+        $processCurrent = (getRawPath -scope Process).TrimEnd(";") + ";"
     }
     catch { }
 
@@ -31,10 +31,10 @@ function Add-EnvPath() {
         return
     }
 
-    setEnvironmentVariable ($userCurrent + $Path).trim(";") User
+    setRawPath ($userCurrent + $Path).trim(";") User
 
     if (!(($processCurrent -split ";").Contains($Path))) {
-        setEnvironmentVariable ($processCurrent + $Path).trim(";") Process
+        setRawPath ($processCurrent + $Path).trim(";") Process
     }
 } 
 
@@ -81,7 +81,7 @@ function Update-EnvPath {
     $user = getTrimmedPath -scope User
     $process = getTrimmedPath -scope Process
     $newpath = ($machine + ';' + $user + ';' + $process).trim(';');
-    setEnvironmentVariable $EnvironmentVariable $newpath [EnvironmentVariableTarget]::Process
+    setRawPath $EnvironmentVariable $newpath [EnvironmentVariableTarget]::Process
     Set-Item -Path Env:$EnvironmentVariable -Value $newpath
 }
 
@@ -98,14 +98,14 @@ function getPathArray {
 function getVariable {
     Param ([Parameter(Mandatory = $true)][EnvironmentVariableTarget]$scope)
 
-    $var = getEnvironmentVariable $scope
+    $var = getRawPath $scope
     if (!$var) {
         throw [VariableNotFoundException]::new("Environment variable ""$envvar"" does not exist")
     }
     $var
 }
 
-function setEnvironmentVariable {
+function setRawPath {
     Param(
         [string]$Value,
         [EnvironmentVariableTarget]$Scope
@@ -113,7 +113,7 @@ function setEnvironmentVariable {
     [Environment]::SetEnvironmentVariable($PathEnvironmentVariable, $Value, $Scope)
 }
 
-function getEnvironmentVariable {
+function getRawPath {
     Param([EnvironmentVariableTarget]$Scope)
     [Environment]::GetEnvironmentVariable($PathEnvironmentVariable, $Scope)
 }
