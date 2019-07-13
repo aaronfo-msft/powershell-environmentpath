@@ -33,7 +33,7 @@
             "type": "PowerShell",
             "request": "launch",
             "script": "Import-Module",
-            "args": [".\\EnvironmentPath.psm1 -Force -ArgumentList \"TESTMODE\""],
+            "args": [".\\EnvironmentPath.psm1 -Force"],
             "cwd": "${file}"
         }
     ]
