@@ -1,12 +1,12 @@
 using namespace System;
 
-Remove-Module EnvPath
-Import-Module .\EnvPath.psm1 -Force
+Remove-Module EnvironmentPath
+Import-Module .\EnvironmentPath.psm1 -Force
 
 $AllScopesOrdered = @([EnvironmentVariableTarget]::Machine, [EnvironmentVariableTarget]::User, [EnvironmentVariableTarget]::Process)
 
-function DoAllScopeGetEnvPathTest {
-    $actual = @(Get-EnvPath)
+function DoAllScopeGetEnvironmentPathTest {
+    $actual = @(Get-EnvironmentPath)
     It "Result has only one element" {
         $actual.Count | Should Be 1
     }
@@ -24,22 +24,22 @@ function DoAllScopeGetEnvPathTest {
     }
 }
 
-Describe "Get-EnvPath tests" {
+Describe "Get-EnvironmentPath tests" {
     Context "Implicit variable does not exist in any scope" {
-        Mock -ModuleName EnvPath getRawPath -MockWith { "" }
-        Mock -ModuleName EnvPath getVariableName -MockWith { "MOCK_PATH" }
+        Mock -ModuleName EnvironmentPath getRawPath -MockWith { "" }
+        Mock -ModuleName EnvironmentPath getVariableName -MockWith { "MOCK_PATH" }
         It "Throws" {
-            { Get-EnvPath } | Should Throw "Environment variable ""MOCK_PATH"" does not exist"
+            { Get-EnvironmentPath } | Should Throw "Environment variable ""MOCK_PATH"" does not exist"
         }
     }
     Context "Implicit variable exists at Machine scope only" {
-        Mock -ModuleName EnvPath getRawPath -MockWith { 
+        Mock -ModuleName EnvironmentPath getRawPath -MockWith { 
             Param ($Variable, $Scope)
             if ($Scope -eq [EnvironmentVariableTarget]::Machine) {
                 return "C:\"
             }
         }
-        $actual = Get-EnvPath
+        $actual = Get-EnvironmentPath
         It "Path is correct" {
             $actual.Path | Should Be "C:\"
         }
@@ -48,13 +48,13 @@ Describe "Get-EnvPath tests" {
         }
     }
     Context "Implicit variable exists at User scope only" {
-        Mock -ModuleName EnvPath getRawPath -MockWith { 
+        Mock -ModuleName EnvironmentPath getRawPath -MockWith { 
             Param ($Variable, $Scope)
             if ($Scope -eq [EnvironmentVariableTarget]::User) {
                 return "C:\"
             }
         }
-        $actual = Get-EnvPath
+        $actual = Get-EnvironmentPath
         It "Path is correct" {
             $actual.Path | Should Be "C:\"
         }
@@ -63,13 +63,13 @@ Describe "Get-EnvPath tests" {
         }
     }
     Context "Implicit variable exists at Process scope only" {
-        Mock -ModuleName EnvPath getRawPath -MockWith { 
+        Mock -ModuleName EnvironmentPath getRawPath -MockWith { 
             Param ($Variable, $Scope)
             if ($Scope -eq [EnvironmentVariableTarget]::Process) {
                 return "C:\"
             }
         }
-        $actual = Get-EnvPath
+        $actual = Get-EnvironmentPath
         It "Path is correct" {
             $actual.Path | Should Be "C:\"
         }
@@ -78,22 +78,22 @@ Describe "Get-EnvPath tests" {
         }
     }
     Context "Implicit variable exists in all scopes" {
-        Mock -ModuleName EnvPath getRawPath -MockWith {  return "C:\" }
-        DoAllScopeGetEnvPathTest
+        Mock -ModuleName EnvironmentPath getRawPath -MockWith {  return "C:\" }
+        DoAllScopeGetEnvironmentPathTest
     }
     Context "Implicit variable has duplicate entries" {
-        Mock -ModuleName EnvPath getRawPath -MockWith {  return "C:\;C:\" }
-        DoAllScopeGetEnvPathTest
+        Mock -ModuleName EnvironmentPath getRawPath -MockWith {  return "C:\;C:\" }
+        DoAllScopeGetEnvironmentPathTest
     }
 
     Context "Implicit variable; hide empty paths" {
-        Mock -ModuleName EnvPath getRawPath -MockWith {  return @{ Machine = ";C:\;C:\"; User = "C:\;;C:\"; Process = "C:\;C:\;" }["$Scope"] }
-        DoAllScopeGetEnvPathTest
+        Mock -ModuleName EnvironmentPath getRawPath -MockWith {  return @{ Machine = ";C:\;C:\"; User = "C:\;;C:\"; Process = "C:\;C:\;" }["$Scope"] }
+        DoAllScopeGetEnvironmentPathTest
     }
 }
 
-function DoBasicAddEnvPathTest {
-    $result = Add-EnvPath
+function DoBasicAddEnvironmentPathTest {
+    $result = Add-EnvironmentPath
     It "Nothing returned" {
         $result | Should Be $null
     }
@@ -102,78 +102,78 @@ function DoBasicAddEnvPathTest {
     }
 }
 
-Describe "Add-EnvPath tests" -Tags "Add-EnvPath" {
-    Mock -ModuleName EnvPath setRawPath { } #safety net
-    Mock -ModuleName EnvPath Get-Location { return @{Path = "C:\" } }
+Describe "Add-EnvironmentPath tests" -Tags "Add-EnvironmentPath" {
+    Mock -ModuleName EnvironmentPath setRawPath { } #safety net
+    Mock -ModuleName EnvironmentPath Get-Location { return @{Path = "C:\" } }
     Context "No pre-existing paths" {
-        Mock -ModuleName EnvPath getRawPath { return "" }
-        Mock -ModuleName EnvPath setRawPath { } -Verifiable -ParameterFilter { $Value -eq "C:\" -and $Scope -eq "User" }
-        Mock -ModuleName EnvPath setRawPath { } -Verifiable -ParameterFilter { $Value -eq "C:\" -and $Scope -eq "Process" }
-        DoBasicAddEnvPathTest
+        Mock -ModuleName EnvironmentPath getRawPath { return "" }
+        Mock -ModuleName EnvironmentPath setRawPath { } -Verifiable -ParameterFilter { $Value -eq "C:\" -and $Scope -eq "User" }
+        Mock -ModuleName EnvironmentPath setRawPath { } -Verifiable -ParameterFilter { $Value -eq "C:\" -and $Scope -eq "Process" }
+        DoBasicAddEnvironmentPathTest
     }
     Context "Process contains more paths than User" {
-        Mock -ModuleName EnvPath getRawPath { return @{ User = "C:\foo"; Process = "C:\foo;C:\bar" }["$Scope"] }
-        Mock -ModuleName EnvPath setRawPath { } -Verifiable -ParameterFilter { $Value -eq "C:\foo;C:\" -and $Scope -eq "User" }
-        Mock -ModuleName EnvPath setRawPath { } -Verifiable -ParameterFilter { $Value -eq "C:\foo;C:\bar;C:\" -and $Scope -eq "Process" }
-        DoBasicAddEnvPathTest
+        Mock -ModuleName EnvironmentPath getRawPath { return @{ User = "C:\foo"; Process = "C:\foo;C:\bar" }["$Scope"] }
+        Mock -ModuleName EnvironmentPath setRawPath { } -Verifiable -ParameterFilter { $Value -eq "C:\foo;C:\" -and $Scope -eq "User" }
+        Mock -ModuleName EnvironmentPath setRawPath { } -Verifiable -ParameterFilter { $Value -eq "C:\foo;C:\bar;C:\" -and $Scope -eq "Process" }
+        DoBasicAddEnvironmentPathTest
     }
     Context "Process already contains path, User does not" {
-        Mock -ModuleName EnvPath getRawPath { return @{ User = "C:\foo"; Process = "C:\foo;C:\bar;C:\" }["$Scope"] }
-        Mock -ModuleName EnvPath setRawPath { } -Verifiable -ParameterFilter { $Value -eq "C:\foo;C:\" -and $Scope -eq "User" }
-        Mock -ModuleName EnvPath setRawPath { } -Verifiable -ParameterFilter { $Scope -eq "Process" }
-        $result = Add-EnvPath
+        Mock -ModuleName EnvironmentPath getRawPath { return @{ User = "C:\foo"; Process = "C:\foo;C:\bar;C:\" }["$Scope"] }
+        Mock -ModuleName EnvironmentPath setRawPath { } -Verifiable -ParameterFilter { $Value -eq "C:\foo;C:\" -and $Scope -eq "User" }
+        Mock -ModuleName EnvironmentPath setRawPath { } -Verifiable -ParameterFilter { $Scope -eq "Process" }
+        $result = Add-EnvironmentPath
         It "Nothing returned" {
             $result | Should Be $null
         }
         It "User path set" {
-            Assert-MockCalled -ModuleName EnvPath setRawPath -Times 1 -ParameterFilter { $Value -eq "C:\foo;C:\" -and $Scope -eq "User" }
+            Assert-MockCalled -ModuleName EnvironmentPath setRawPath -Times 1 -ParameterFilter { $Value -eq "C:\foo;C:\" -and $Scope -eq "User" }
         }
         It "Process path not set" {
-            Assert-MockCalled -ModuleName EnvPath setRawPath -Times 0 -ParameterFilter { $Scope -eq "Process" }
+            Assert-MockCalled -ModuleName EnvironmentPath setRawPath -Times 0 -ParameterFilter { $Scope -eq "Process" }
         }
     }
     Context "Explicit path doesn't exist" {
         It "Throws" {
             $guid = New-Guid
-            { Add-EnvPath "C:\$guid" } | Should Throw
+            { Add-EnvironmentPath "C:\$guid" } | Should Throw
         }
     }
 }
 
-Describe "Update-EnvPath tests" -Tags "Update-EnvPath" {
-    Mock -ModuleName EnvPath setRawPath { } #safety net
+Describe "Update-EnvironmentPath tests" -Tags "Update-EnvironmentPath" {
+    Mock -ModuleName EnvironmentPath setRawPath { } #safety net
     Context "Process has some but not all User and Machine paths" {
         $expectedPath = "machineUnique;machineCommon;userUnique;userCommon;processUnique"
-        Mock -ModuleName EnvPath getRawPath { return @{ Machine = "machineUnique;machineCommon"; User = "userUnique;userCommon"; Process = "machineCommon;userCommon;processUnique" }["$Scope"] }
-        Mock -ModuleName EnvPath setRawPath { } -Verifiable -ParameterFilter { $Value -eq $expectedPath -and $Scope -eq "Process" }
-        Mock -ModuleName EnvPath setRawPath { } -Verifiable -ParameterFilter { $Scope -eq "Machine" -or $Scope -eq "User" }
-        Update-EnvPath | Should Be $null
+        Mock -ModuleName EnvironmentPath getRawPath { return @{ Machine = "machineUnique;machineCommon"; User = "userUnique;userCommon"; Process = "machineCommon;userCommon;processUnique" }["$Scope"] }
+        Mock -ModuleName EnvironmentPath setRawPath { } -Verifiable -ParameterFilter { $Value -eq $expectedPath -and $Scope -eq "Process" }
+        Mock -ModuleName EnvironmentPath setRawPath { } -Verifiable -ParameterFilter { $Scope -eq "Machine" -or $Scope -eq "User" }
+        Update-EnvironmentPath | Should Be $null
         It "Process path set" {
-            Assert-MockCalled -ModuleName EnvPath setRawPath -Times 1 -ParameterFilter { $Value -eq $expectedPath -and $Scope -eq "Process" }
+            Assert-MockCalled -ModuleName EnvironmentPath setRawPath -Times 1 -ParameterFilter { $Value -eq $expectedPath -and $Scope -eq "Process" }
         }
         It "Neither Machine nor User paths set" {
-            Assert-MockCalled -ModuleName EnvPath setRawPath -Times 0 -ParameterFilter { $Scope -eq "Machine" -or $Scope -eq "User" }
+            Assert-MockCalled -ModuleName EnvironmentPath setRawPath -Times 0 -ParameterFilter { $Scope -eq "Machine" -or $Scope -eq "User" }
         }
     }
     Context "Variable is empty in all scopes" {
-        Mock -ModuleName EnvPath getRawPath { return "" }
+        Mock -ModuleName EnvironmentPath getRawPath { return "" }
         It "Throws" {
-            { Update-EnvPath } | Should Throw
+            { Update-EnvironmentPath } | Should Throw
         }
         It "Does not call set" {
-            Assert-MockCalled -ModuleName EnvPath setRawPath -Times 0
+            Assert-MockCalled -ModuleName EnvironmentPath setRawPath -Times 0
         } 
     }
     Context "Variable exists in all but Machine scope" {
-        Mock -ModuleName EnvPath getRawPath { return @{ Machine = ""; User = "somepath"; Process = "somepath" }["$Scope"] }
-        Mock -ModuleName EnvPath setRawPath { } -Verifiable -ParameterFilter { $Value -eq "somepath" -and $Scope -eq "Process" }
-        Mock -ModuleName EnvPath setRawPath { } -Verifiable -ParameterFilter { $Scope -eq "Machine" -or $Scope -eq "User" }
-        Update-EnvPath
+        Mock -ModuleName EnvironmentPath getRawPath { return @{ Machine = ""; User = "somepath"; Process = "somepath" }["$Scope"] }
+        Mock -ModuleName EnvironmentPath setRawPath { } -Verifiable -ParameterFilter { $Value -eq "somepath" -and $Scope -eq "Process" }
+        Mock -ModuleName EnvironmentPath setRawPath { } -Verifiable -ParameterFilter { $Scope -eq "Machine" -or $Scope -eq "User" }
+        Update-EnvironmentPath
         It "Process path set" {
-            Assert-MockCalled -ModuleName EnvPath setRawPath -Times 1 -ParameterFilter { $Value -eq "somepath" -and $Scope -eq "Process" }
+            Assert-MockCalled -ModuleName EnvironmentPath setRawPath -Times 1 -ParameterFilter { $Value -eq "somepath" -and $Scope -eq "Process" }
         }
         It "Neither Machine nor User paths set" {
-            Assert-MockCalled -ModuleName EnvPath setRawPath -Times 0 -ParameterFilter { $Scope -eq "Machine" -or $Scope -eq "User" }
+            Assert-MockCalled -ModuleName EnvironmentPath setRawPath -Times 0 -ParameterFilter { $Scope -eq "Machine" -or $Scope -eq "User" }
         } 
     }
 }

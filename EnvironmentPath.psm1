@@ -2,7 +2,7 @@
 
 class VariableNotFoundException : Exception { }
 
-function Add-EnvPath() {
+function Add-EnvironmentPath() {
     [CmdletBinding(
         SupportsShouldProcess = $true,
         ConfirmImpact = 'Low')]
@@ -33,7 +33,7 @@ function Add-EnvPath() {
     }
 } 
 
-function Get-EnvPath {
+function Get-EnvironmentPath {
     $allScopes = @([EnvironmentVariableTarget]::Machine, [EnvironmentVariableTarget]::User, [EnvironmentVariableTarget]::Process)
     $exceptionCount = 0
     $resultsHash = [ordered]@{ }
@@ -68,8 +68,8 @@ function Get-EnvPath {
     $resultsHash.Keys | ForEach-Object { New-Object psobject -Property @{Path = $_; Scope = @($resultsHash[$_].Keys) } }
 }
 
-function Update-EnvPath {
-    $newPath = @((Get-EnvPath).Path) -join ";"
+function Update-EnvironmentPath {
+    $newPath = @((Get-EnvironmentPath).Path) -join ";"
     setRawPath $newPath Process
 }
 
@@ -100,4 +100,4 @@ function getRawPath {
     [Environment]::GetEnvironmentVariable((getVariableName), $Scope)
 }
 
-Export-ModuleMember -Function Add-EnvPath, Get-EnvPath, Update-EnvPath
+Export-ModuleMember -Function Add-EnvironmentPath, Get-EnvironmentPath, Update-EnvironmentPath
