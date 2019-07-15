@@ -13,19 +13,19 @@
             "cwd" : "${workspaceFolder}"
         },
         {
-            "name": "Add-EnvPath tests",
+            "name": "Add-EnvironmentPath tests",
             "type": "PowerShell",
             "request": "launch",
             "script": "Invoke-Pester",
-            "args": ["-Tag 'Add-EnvPath'"],
+            "args": ["-Tag 'Add-EnvironmentPath'"],
             "cwd" : "${workspaceFolder}"
         },
         {
-            "name": "Update-EnvPath tests",
+            "name": "Update-EnvironmentPath tests",
             "type": "PowerShell",
             "request": "launch",
             "script": "Invoke-Pester",
-            "args": ["-Tag 'Update-EnvPath'"],
+            "args": ["-Tag 'Update-EnvironmentPath'"],
             "cwd" : "${workspaceFolder}"
         },
         {
@@ -33,7 +33,7 @@
             "type": "PowerShell",
             "request": "launch",
             "script": "Import-Module",
-            "args": [".\\EnvPath.psm1 -Force -ArgumentList \"TESTMODE\""],
+            "args": [".\\EnvironmentPath.psm1 -Force"],
             "cwd": "${file}"
         }
     ]
